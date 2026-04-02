@@ -1,0 +1,146 @@
+<div class="chat-wrapper">
+  <header class="chat-header">
+    <div class="header-left">
+      <div class="agent-avatar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M6 20v-2a6 6 0 0 1 12 0v2" />
+          <line x1="12" y1="2" x2="12" y2="4" />
+          <line x1="12" y1="20" x2="12" y2="22" />
+          <line x1="2" y1="12" x2="4" y2="12" />
+          <line x1="20" y1="12" x2="22" y2="12" />
+        </svg>
+      </div>
+      <div class="header-info">
+        <span class="header-title">AG-UI Agent</span>
+        <span class="header-status">
+          <span class="status-dot"></span>
+          localhost:8888
+        </span>
+      </div>
+    </div>
+    <button
+      class="btn-icon"
+      (click)="clearChat()"
+      [disabled]="isLoading()"
+      title="Limpar conversa"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14H6L5 6" />
+        <path d="M10 11v6M14 11v6" />
+        <path d="M9 6V4h6v2" />
+      </svg>
+    </button>
+  </header>
+
+  <!-- Messages -->
+  <main class="messages-area" role="log" aria-live="polite">
+    @if (messages().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <h2>Como posso ajudar?</h2>
+        <p>Envie uma mensagem para iniciar a conversa com o agente AG-UI.</p>
+        <div class="example-prompts">
+          <button class="example-chip" (click)="inputText.set('Olá! O que você pode fazer?')">
+            👋 Olá! O que você pode fazer?
+          </button>
+          <button class="example-chip" (click)="inputText.set('Me conte uma curiosidade interessante.')">
+            💡 Me conte uma curiosidade
+          </button>
+          <button class="example-chip" (click)="inputText.set('Escreva um poema curto.')">
+            ✍️ Escreva um poema curto
+          </button>
+        </div>
+      </div>
+    }
+
+    @for (msg of messages(); track msg.id) {
+      <div class="message-row" [class.user-row]="msg.role === 'user'">
+        @if (msg.role === 'assistant') {
+          <div class="avatar assistant-avatar" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M6 20v-2a6 6 0 0 1 12 0v2" />
+            </svg>
+          </div>
+        }
+        <div
+          class="message-bubble"
+          [class.user-bubble]="msg.role === 'user'"
+          [class.assistant-bubble]="msg.role === 'assistant'"
+          [class.error-bubble]="msg.hasError"
+        >
+          <div class="message-text">{{ msg.content }}@if (msg.isStreaming) {
+              <span class="cursor" aria-hidden="true"></span>
+            }</div>
+        </div>
+        @if (msg.role === 'user') {
+          <div class="avatar user-avatar" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+        }
+      </div>
+    }
+
+    @if (isLoading() && messages().length > 0 && !messages()[messages().length - 1].isStreaming) {
+      <div class="message-row">
+        <div class="avatar assistant-avatar" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M6 20v-2a6 6 0 0 1 12 0v2" />
+          </svg>
+        </div>
+        <div class="message-bubble assistant-bubble">
+          <div class="typing-dots" aria-label="Agente digitando">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div #messagesEnd></div>
+  </main>
+
+  <!-- Input Area -->
+  <footer class="input-area">
+    <div class="input-container" [class.disabled]="isLoading()">
+      <textarea
+        class="message-input"
+        [ngModel]="inputText()"
+        (ngModelChange)="inputText.set($event)"
+        (keydown)="onKeyDown($event)"
+        placeholder="Mensagem ao agente... (Enter para enviar)"
+        [disabled]="isLoading()"
+        rows="1"
+        aria-label="Campo de mensagem"
+      ></textarea>
+      <button
+        class="send-btn"
+        (click)="sendMessage()"
+        [disabled]="isLoading() || !inputText().trim()"
+        aria-label="Enviar mensagem"
+        title="Enviar (Enter)"
+      >
+        @if (isLoading()) {
+          <span class="spinner"></span>
+        } @else {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        }
+      </button>
+    </div>
+    <p class="input-hint">
+      Conectado a <code>http://localhost:8888/agent</code> via AG-UI Protocol
+    </p>
+  </footer>
+</div>

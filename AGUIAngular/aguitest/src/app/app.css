@@ -1,0 +1,9 @@
+:host {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+  min-height: 100vh;
+}
